@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Movie Recommender</h1>
+        
+        <label for="title">Enter Movie Title:</label>
+        <input type="text" id="title" placeholder="e.g., Inception" required>
+        
+        <label for="genre">Enter Genre (optional):</label>
+        <input type="text" id="genre" placeholder="e.g., Sci-Fi">
+        
+        <button onclick="getRecommendations()">Get Recommendations</button>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function getRecommendations() {
+            // Get input values
+            const title = document.getElementById("title").value.trim();
+            const genre = document.getElementById("genre").value.trim();
+            
+            // Check if title is provided
+            if (!title) {
+                alert("Please enter a movie title.");
+                return;
+            }
+
+            // Define the API endpoint URL based on whether genre is provided
+            const apiUrl = genre ? "/recommend_by_genre" : "/recommend";
+            const payload = genre ? { title, genre } : { title };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                // Check if there was an error in the response
+                if (data.error) {
+                    document.getElementById("result").innerHTML = `<p>${data.error}</p>`;
+                    return;
+                }
+                
+                // Display recommendations
+                const recommendations = data.recommendations.map(movie => 
+                    `<li>${movie.title} (${movie.release_date})</li>`
+                ).join("");
+                
+                document.getElementById("result").innerHTML = `
+                    <h3>Recommendations for "${data.title}" (${data.release_date}):</h3>
+                    <ul>${recommendations}</ul>
+                `;
+            } catch (error) {
+                console.error("Error fetching recommendations:", error);
+                document.getElementById("result").innerHTML = "<p>Failed to get recommendations. Please try again later.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
